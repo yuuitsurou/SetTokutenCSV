@@ -42,13 +42,13 @@ Private Scs() As Score
 
 Private Enum Sitms
    Nen = 0,
-   Kumi,
-   Ban,
-   Sei,
-   Mei,
-   Haiten,
-   Tokuten,
-   Kanten1,
+   Kumi
+   Ban
+   Sei
+   Mei
+   Haiten
+   Tokuten
+   Kanten1
    Kanten2
 End Enum
 
