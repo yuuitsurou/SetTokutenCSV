@@ -1,4 +1,17 @@
 Attribute VB_Name = "Main"
+'/////////////////////////////////////////////////////
+'// Main.bas
+'// リアテンダントの得点ファイルを取り込む
+'//
+'// 関数
+'// DoClearData()
+'// DoClearMeibo()
+'// SetTokutenCSV()
+'// CsvToScs()
+'// IsSelectedFile(fn)
+'//
+'// 履歴
+'// Ver.0.1                2026/02/06
 Option Explicit
 
 Private Const G_COL_NEN = 2
@@ -25,14 +38,26 @@ Private Type Score
     Kanten2 As String
 End Type
 
+Private Scs() As Score
+
+Private Enum Sitms
+   Nen = 0,
+   Kumi,
+   Ban,
+   Sei,
+   Mei,
+   Haiten,
+   Tokuten,
+   Kanten1,
+   Kanten2
+End Enum
+
+Private Const G_LIN_TITLE = 0
 Private Const G_DATA_SET_SHEET = "考査得点・クラス名票貼り付け"
 Private Const G_CONF_SHEET = "設定"
 Private Const G_CELL_NEN = "A2"
 Private Const G_ROW_FILE_START = 5
 Private Const G_COL_FILE_START = 1
-
-Private Scs() As Score
-
 
 '/////////////////////////////////////////////////////
 '// DoClearData
@@ -62,6 +87,7 @@ Public Sub DoClearData()
     
 DoClearData_Error:
     Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+    Err.Clear
     
 End Sub
 
@@ -80,6 +106,7 @@ Public Sub DoClearMeibo()
     
 DoClearMeibo_Error:
     Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+    Err.Clear
 
 End Sub
 
@@ -94,7 +121,7 @@ Public Sub SetTokutenCSV()
     
     'ファイルの文字コードを Shift_SJIS に変換したファイルを作成して、読み込み
     '配列 Scs にセットする
-    If Not SelectCSVFile() Then Exit Sub
+    If Not CsvToScs() Then Exit Sub
 
     Sheets(G_DATA_SET_SHEET).Select
     Range("B18").Select
@@ -202,16 +229,16 @@ SetTokutenCSV_Error:
 End Sub
 
 '/////////////////////////////////////////////////////
-'// SelectCSVFile
+'// CsvToScs
 '// リアテンダントからダウンロードしたファイルを読み込み
 '// Shift_JIS に変換してファイルを作成し、それを読み込んで
 '// 配列 Scs にセットする
 '// 戻り値:
 '// 処理の成功か否か
 '//
-Private Function SelectCSVFile() As Boolean
+Private Function CsvToScs() As Boolean
 
-    On Error GoTo SelectCSVFile_Error
+    On Error GoTo CsvToScs_Error
     
     Dim fn As String
     Dim dlg As FileDialog
@@ -223,13 +250,14 @@ Private Function SelectCSVFile() As Boolean
         .AllowMultiSelect = False
         If .Show = False Then
 	   Call MsgBox("キャンセルされました。")
-	   SelectCSVFile = False
+	   CsvToScs = False
+	   Exit Function
         Else
             fn = .SelectedItems(1)
         End If
     End With
-    If CheckFileName(fn) Then
-       SelectCSVFile = False
+    If IsSelectedFile(fn) Then
+       CsvToScs = False
        Exit Function
     End If
 
@@ -237,46 +265,45 @@ Private Function SelectCSVFile() As Boolean
     fc = ReadFileToSJISText(fn)
     If Len(fc) <= 0 Then
        Call MsgBox("選択されたファイルに取り込めるデータがありません。" & vbCrLf & "(" & fn & ")")
-       SelectCSVFile = False
+       CsvToScs = False
     Else
-       SelectCSVFile = True
+       CsvToScs = True
     End If
 
     Dim lines() As String
-    lines = Split(fc, vbCrLF)
+    lines = Split(fc, vbCrLf)
     
     Dim ii As Long: ii = 0
     Dim scs_idx As Long: scs_idx = -1
     Dim items() As String
     Dim seimei() As String
-    Erase Scs
-    For ii = 1 To UBound(lines)
+    For ii = (G_LIN_TITLE + 1) To UBound(lines)
        items = Split(lines(ii), ",")
        scs_idx = scs_idx + 1
-       If items(0) <> "" Then
-	  If items(0) <> Sheets(G_CONF_SHEET).Cells(G_CELL_NEN).Value Then
+       If items(Sitms.Nen) <> "" Then
+	  If items(Sitms.Nen) <> Sheets(G_CONF_SHEET).Cells(G_CELL_NEN).Value Then
 	     Call MsgBox("選択されたファイルには学年が違うデータがあるようです。" & vbCrLf & _
-			 CStr(ii) & "行目 " & _
-			 "想定されている学年: " & CStr(Sheets(G_CONF_SHEET).Cells(G_CELL_NEN).Value) & " / " & "このファイルにあるデータ:" & items(0))
-	     SelectCSVFile = False
+			 CStr(ii + 1) & "行目 " & _
+			 "想定されている学年: " & CStr(Sheets(G_CONF_SHEET).Cells(G_CELL_NEN).Value) & " / " & "このファイルにあるデータ:" & items(Sitms.Nen))
+	     CsvToScs = False
 	     Exit Function
 	  End If
 	  ReDim Preserve Scs(scs_idx)
-	  Scs(scs_idx).Nen = items(0)
-	  Scs(scs_idx).Kumi = items(1)
-	  Scs(scs_idx).Ban = items(2)
-	  If items(4) = "さん" Then
-	     seimei = Split(items(3), " ")
+	  Scs(scs_idx).Nen = items(Sitms.Nen)
+	  Scs(scs_idx).Kumi = items(Sitms.Kumi)
+	  Scs(scs_idx).Ban = items(Sitms.Ban)
+	  If items(Sitms.Mei) = "さん" Then
+	     seimei = Split(items(Sitms.Sei), " ")
 	     Scs(scs_idx).Sei = seimei(0)
 	     Scs(scs_idx).Mei = seimei(1)
 	  Else
-	     Scs(scs_idx).Sei = items(3)
-	     Scs(scs_idx).Mei = items(4)
+	     Scs(scs_idx).Sei = items(Sitms.Sei)
+	     Scs(scs_idx).Mei = items(Sitms.Mei)
 	  End If
-	  Scs(scs_idx).Haiten = items(5)
-	  Scs(scs_idx).Tokuten = items(6)
-	  Scs(scs_idx).Kanten1 = items(7)
-	  Scs(scs_idx).Kanten2 = items(8)
+	  Scs(scs_idx).Haiten = items(Sitms.Haiten)
+	  Scs(scs_idx).Tokuten = items(Sitms.Tokuten)
+	  Scs(scs_idx).Kanten1 = items(Sitms.Kanten1)
+	  Scs(scs_idx).Kanten2 = items(Sitms.Kanten2)
        Else
 	  scs_idx = scs_idx - 1
        End If
@@ -284,18 +311,26 @@ Private Function SelectCSVFile() As Boolean
     
     Exit Function
     
-SelectCSVFile_Error:
+CsvToScs_Error:
     Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
     Err.Clear
-    SelectCSVFile = False
+    CsvToScs = False
 
 End Function
 
-Private Function CheckFileName(ByVal fn As String) As Boolean
+'/////////////////////////////////////////////////////
+'// IsSelectedFile
+'// 選択されたファイルが以前に取り込まれたファイル名と同じかどうかをチェックする
+'// 引数:
+'// fn: 文字列 ファイル名
+'// 戻り値:
+'// 処理の成功か否か
+'//
+Private Function IsSelectedFile(ByVal fn As String) As Boolean
 
-   On Error GoTo CheckFileName_Error
+   On Error GoTo IsSelectedFile_Error
 
-   CheckFileName = False
+   IsSelectedFile = False
    If Len(fn) = 0 Then Exit Function
    Dim c As Long: c = G_COL_FILE_START
    Dim r As Long: r = G_ROW_FILE_START
@@ -304,20 +339,21 @@ Private Function CheckFileName(ByVal fn As String) As Boolean
       Do
 	 If .Cells(r, c).Value = "" Then
 	    .Cells(r, c).Value = fn
+	    IsSelectedFile = False
 	    Exit Do
 	 Elseif .Cells(r, c).Value = fn Then
 	    Dim result As Long
 	    result = MsgBox("このファイルは以前取り込んだことがあるファイルのようです。再度取り込みますか？" & vbCrLf & _
 			    "ファイル名: " & fn , vbYesNo + vbQuestion + vbDefaultButton2, "確認")
 	    If result = vbNo Then 
-	       CheckFileName = True
+	       IsSelectedFile = True
 	       Exit Do
 	    Else
 	       Do Until .Cells(r, c).Value = ""
 		  r = r + 1
 	       Loop
 	       .Cells(r, c).Value = fn
-	       CheckFileName = False
+	       IsSelectedFile = False
 	       Exit Do
 	    End If
 	 End If
@@ -327,9 +363,9 @@ Private Function CheckFileName(ByVal fn As String) As Boolean
    
    Exit Function
 
-CheckFileName_Error:
+IsSelectedFile_Error:
     Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
     Err.Clear
-    CheckFileName = False
+    IsSelectedFile = False
    
 End Function
