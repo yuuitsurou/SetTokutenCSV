@@ -41,7 +41,7 @@ End Type
 Private Scs() As Score
 
 Private Enum Sitms
-   Nen = 0,
+   Nen = 0
    Kumi
    Ban
    Sei
