@@ -1,19 +1,19 @@
 Attribute VB_Name = "Main"
 Option Explicit
 
-Public Const G_COL_NEN = 2
-Public Const G_COL_KUMI = 3
-Public Const G_COL_BAN = 4
-Public Const G_COL_SEI = 5
-Public Const G_COL_MEI = 6
+Private Const G_COL_NEN = 2
+Private Const G_COL_KUMI = 3
+Private Const G_COL_BAN = 4
+Private Const G_COL_SEI = 5
+Private Const G_COL_MEI = 6
 
-Public Const G_ROW_DAT_START = 18
-Public Const G_ROW_DAT_END = 217
-Public Const G_COL_DAT_END = 30
+Private Const G_ROW_DAT_START = 18
+Private Const G_ROW_DAT_END = 217
+Private Const G_COL_DAT_END = 30
 
-Public Const G_DAT_MAX = 200
+Private Const G_DAT_MAX = 200
 
-Public Type Score
+Private Type Score
     Nen As String
     Kumi As String
     Ban As String
@@ -25,10 +25,17 @@ Public Type Score
     Kanten2 As String
 End Type
 
-Public Scs() As Score
+Private Const G_DATA_SET_SHEET = "考査得点・クラス名票貼り付け"
+Private Const G_CONF_SHEET = "設定"
+Private Const G_CELL_NEN = "A2"
+Private Const G_ROW_FILE_START = 5
+Private Const G_COL_FILE_START = 1
+
+Private Scs() As Score
+
 
 '/////////////////////////////////////////////////////
-'//
+'// DoClearData
 '// 得点データのクリア
 '//
 Public Sub DoClearData()
@@ -59,8 +66,8 @@ DoClearData_Error:
 End Sub
 
 '/////////////////////////////////////////////////////
-'//
-'//生徒名リストのクリア
+'// DoClearMeibo
+'// 生徒名リストのクリア
 '//
 Public Sub DoClearMeibo()
 
@@ -85,44 +92,11 @@ Public Sub SetTokutenCSV()
 
     On Error GoTo SetTokutenCSV_Error
     
-    Dim fn As String
     'ファイルの文字コードを Shift_SJIS に変換したファイルを作成して、読み込み
-    fn = SelectCSVFile()
-    If fn = "" Then Exit Sub
-    
-    Dim fso As FileSystemObject: Set fso = New FileSystemObject
-    Dim fs As TextStream
-    Set fs = fso.OpenTextFile(fn, ForReading)
-    
-    Dim ii As Long: ii = 0
-    Dim line As String
-    Dim items() As String
-    Dim seimei() As String
-    '行をカンマで分解し、配列にセットする
-    Do Until fs.AtEndOfStream
-        line = fs.ReadLine
-        If ii > 0 Then
-            items = Split(line, ",")
-            If items(0) <> "" Then
-                ReDim Preserve Scs(ii - 1)
-                Scs(ii - 1).Nen = items(0)
-                Scs(ii - 1).Kumi = items(1)
-                Scs(ii - 1).Ban = items(2)
-                seimei = Split(items(3), " ")
-                Scs(ii - 1).Sei = seimei(0)
-                Scs(ii - 1).Mei = seimei(1)
-                Scs(ii - 1).Haiten = items(5)
-                Scs(ii - 1).Tokuten = items(6)
-                Scs(ii - 1).Kanten1 = items(7)
-                Scs(ii - 1).Kanten2 = items(8)
-            Else
-                ii = ii - 1
-            End If
-        End If
-        ii = ii + 1
-    Loop
-    
-    Sheets("考査得点・クラス名票貼り付け").Select
+    '配列 Scs にセットする
+    If Not SelectCSVFile() Then Exit Sub
+
+    Sheets(G_DATA_SET_SHEET).Select
     Range("B18").Select
     
     On Error Resume Next
@@ -141,7 +115,7 @@ Public Sub SetTokutenCSV()
     Application.ScreenUpdating = False
     
     Dim c As Range
-    ii = 0
+    Dim ii As Long: ii = 0
     Dim ri As Long
     Dim setToCell As Boolean
     Dim newri As Long
@@ -200,14 +174,14 @@ Public Sub SetTokutenCSV()
     Application.ScreenUpdating = True
     
     Range(Cells(G_ROW_DAT_START - 1, 1), Cells(G_ROW_DAT_END, G_COL_DAT_END)).Select
-    ActiveWorkbook.Worksheets("考査得点・クラス名票貼り付け").Sort.SortFields.Clear
-    ActiveWorkbook.Worksheets("考査得点・クラス名票貼り付け").Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_NEN), Cells(G_ROW_DAT_END, 2)), _
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_NEN), Cells(G_ROW_DAT_END, 2)), _
         SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    ActiveWorkbook.Worksheets("考査得点・クラス名票貼り付け").Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_KUMI), Cells(G_ROW_DAT_END, 3)), _
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_KUMI), Cells(G_ROW_DAT_END, 3)), _
         SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    ActiveWorkbook.Worksheets("考査得点・クラス名票貼り付け").Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_BAN), Cells(G_ROW_DAT_END, 4)), _
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_BAN), Cells(G_ROW_DAT_END, 4)), _
         SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    With ActiveWorkbook.Worksheets("考査得点・クラス名票貼り付け").Sort
+    With ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort
         .SetRange Range(Cells(G_ROW_DAT_START - 1, 1), Cells(G_ROW_DAT_END, G_COL_DAT_END))
         .Header = xlYes
         .MatchCase = False
@@ -217,8 +191,7 @@ Public Sub SetTokutenCSV()
     End With
     For ii = 1 To G_DAT_MAX
         Cells(ii + 17, 1).Value = ii
-    Next
-    
+    Next    
     
     Exit Sub
     
@@ -231,11 +204,12 @@ End Sub
 '/////////////////////////////////////////////////////
 '// SelectCSVFile
 '// リアテンダントからダウンロードしたファイルを読み込み
-'// Shift_JIS に変換してファイルを作成する
+'// Shift_JIS に変換してファイルを作成し、それを読み込んで
+'// 配列 Scs にセットする
 '// 戻り値:
-'// 作成した Shift_JIS ファイルのファイル名
+'// 処理の成功か否か
 '//
-Private Function SelectCSVFile() As String
+Private Function SelectCSVFile() As Boolean
 
     On Error GoTo SelectCSVFile_Error
     
@@ -248,38 +222,114 @@ Private Function SelectCSVFile() As String
         .InitialFileName = Application.ActiveWorkbook.path
         .AllowMultiSelect = False
         If .Show = False Then
-            Call MsgBox("キャンセルされました。")
-            Exit Function
+	   Call MsgBox("キャンセルされました。")
+	   SelectCSVFile = False
         Else
             fn = .SelectedItems(1)
         End If
     End With
+    If CheckFileName(fn) Then
+       SelectCSVFile = False
+       Exit Function
+    End If
+
+    Dim fc As String
+    fc = ReadFileToSJISText(fn)
+    If Len(fc) <= 0 Then
+       Call MsgBox("選択されたファイルに取り込めるデータがありません。" & vbCrLf & "(" & fn & ")")
+       SelectCSVFile = False
+    Else
+       SelectCSVFile = True
+    End If
+
+    Dim lines() As String
+    lines = Split(fc, vbCrLF)
     
-    Dim rStream As New ADODB.Stream
-    rStream.Type = adTypeText
-    rStream.Charset = "UTF-8"
-    rStream.Open
-    Call rStream.LoadFromFile(fn)
-    
-    Dim t As Variant
-    
-    t = rStream.ReadText
-    t = Replace(t, vbLf, vbCrLf)
-    t = Replace(t, vbCr & vbCr, vbCr)
-    
-    Dim wStream As New ADODB.Stream
-    wStream.Type = adTypeText
-    wStream.Charset = "Shift-JIS"
-    wStream.Open
-    Call wStream.WriteText(t)
-    fn = Left(fn, InStrRev(fn, ".") - 1) & "_SJIS.csv"
-    Call wStream.SaveToFile(fn, adSaveCreateOverWrite)
-    SelectCSVFile = fn
+    Dim ii As Long: ii = 0
+    Dim scs_idx As Long: scs_idx = -1
+    Dim items() As String
+    Dim seimei() As String
+    Erase Scs
+    For ii = 1 To UBound(lines)
+       items = Split(lines(ii), ",")
+       scs_idx = scs_idx + 1
+       If items(0) <> "" Then
+	  If items(0) <> Sheets(G_CONF_SHEET).Cells(G_CELL_NEN).Value Then
+	     Call MsgBox("選択されたファイルには学年が違うデータがあるようです。" & vbCrLf & _
+			 CStr(ii) & "行目 " & _
+			 "想定されている学年: " & CStr(Sheets(G_CONF_SHEET).Cells(G_CELL_NEN).Value) & " / " & "このファイルにあるデータ:" & items(0))
+	     SelectCSVFile = False
+	     Exit Function
+	  End If
+	  ReDim Preserve Scs(scs_idx)
+	  Scs(scs_idx).Nen = items(0)
+	  Scs(scs_idx).Kumi = items(1)
+	  Scs(scs_idx).Ban = items(2)
+	  If items(4) = "さん" Then
+	     seimei = Split(items(3), " ")
+	     Scs(scs_idx).Sei = seimei(0)
+	     Scs(scs_idx).Mei = seimei(1)
+	  Else
+	     Scs(scs_idx).Sei = items(3)
+	     Scs(scs_idx).Mei = items(4)
+	  End If
+	  Scs(scs_idx).Haiten = items(5)
+	  Scs(scs_idx).Tokuten = items(6)
+	  Scs(scs_idx).Kanten1 = items(7)
+	  Scs(scs_idx).Kanten2 = items(8)
+       Else
+	  scs_idx = scs_idx - 1
+       End If
+    Next
     
     Exit Function
     
 SelectCSVFile_Error:
     Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+    Err.Clear
+    SelectCSVFile = False
 
 End Function
 
+Private Function CheckFileName(ByVal fn As String) As Boolean
+
+   On Error GoTo CheckFileName_Error
+
+   CheckFileName = False
+   If Len(fn) = 0 Then Exit Function
+   Dim c As Long: c = G_COL_FILE_START
+   Dim r As Long: r = G_ROW_FILE_START
+
+   With Sheets(G_CONF_SHEET)
+      Do
+	 If .Cells(r, c).Value = "" Then
+	    .Cells(r, c).Value = fn
+	    Exit Do
+	 Elseif .Cells(r, c).Value = fn Then
+	    Dim result As Long
+	    result = MsgBox("このファイルは以前取り込んだことがあるファイルのようです。再度取り込みますか？" & vbCrLf & _
+			    "ファイル名: " & fn , vbYesNo + vbQuestion + vbDefaultButton2, "確認")
+	    If result = vbNo Then 
+	       CheckFileName = True
+	       Exit Do
+	    Else
+	       Do Until .Cells(r, c).Value = ""
+		  r = r + 1
+	       Loop
+	       .Cells(r, c).Value = fn
+	       CheckFileName = False
+	       Exit Do
+	    End If
+	 End If
+	 r = r + 1
+      Loop
+   End With
+   
+   Exit Function
+
+CheckFileName_Error:
+    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+    Err.Clear
+    CheckFileName = False
+   
+End Function
