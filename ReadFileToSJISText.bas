@@ -18,12 +18,12 @@ Private Const adReadLine = -2
 
 '////////////////////////////////////////////////////////////
 '// ReadFileToSJISText
-'// ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚“ã§ SJIS ã®æ–‡å­—åˆ—ã‚’è¿”ã™
-'// å¼•æ•°Ë
-'// fn : ãƒ•ã‚¡ã‚¤ãƒ«å
+'// ƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚ñ‚Å SJIS ‚Ì•¶š—ñ‚ğ•Ô‚·
+'// ˆø”:
+'// fn : ƒtƒ@ƒCƒ‹–¼
 '//      ex. C:\test\file.txt
-'// æˆ»ã‚Šå€¤Ë
-'// Shift_JIS ã®æ–‡å­—åˆ—(è¡ŒåŒºåˆ‡ã‚Šã¯ CRLF)
+'// –ß‚è’l:
+'// Shift_JIS ‚Ì•¶š—ñ(s‹æØ‚è‚Í CRLF)
 '//
 Public Function ReadFileToSJISText(ByVal fn As String) As String
 
@@ -32,7 +32,7 @@ Public Function ReadFileToSJISText(ByVal fn As String) As String
    ReadFileToSJISText = ""
    Dim fso As Object: Set fso = CreateObject("Scripting.FileSystemObject")
    If Not fso.FileExists(fn) Then
-      Call MsgBox("ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ã¾ã›ã‚“ã€‚" & vbCrLf & fn)
+      Call MsgBox("ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚Ü‚¹‚ñB" & vbCrLf & fn)
       Exit Function
    Else
       Set fso = Nothing
@@ -77,18 +77,18 @@ Public Function ReadFileToSJISText(ByVal fn As String) As String
    
    Exit Function
 ReadFileToSJISText_Error:
-   Call MsgBox"ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbcrlf & "ReadFileToSJISText:(" & Err.Number & ":" & Err.Description & ")")
+   Call MsgBox"ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbcrlf & "ReadFileToSJISText:(" & Err.Number & ":" & Err.Description & ")")
    
 End Function
 
 '////////////////////////////////////////////////////////////
 '// MojiCode
-'// ãƒ•ã‚¡ã‚¤ãƒ«ã®æ–‡å­—ã‚³ãƒ¼ãƒ‰ã‚’åˆ¤å®šã™ã‚‹
-'// å¼•æ•°:
-'// fn : ãƒ•ã‚¡ã‚¤ãƒ«å
+'// ƒtƒ@ƒCƒ‹‚Ì•¶šƒR[ƒh‚ğ”»’è‚·‚é
+'// ˆø”:
+'// fn : ƒtƒ@ƒCƒ‹–¼
 '//      ex. C:\text\file.txt
-'// æˆ»ã‚Šå€¤:
-'// æ–‡å­—ã‚³ãƒ¼ãƒ‰æ–‡å­—åˆ—(å®šæ•°ã‚’å‚ç…§)
+'// –ß‚è’l:
+'// •¶šƒR[ƒh•¶š—ñ(’è”‚ğQÆ)
 Public Function MojiCode(ByVal fn As String) As String
 
    On Error GoTo MojiCode_Error
@@ -121,17 +121,17 @@ Public Function MojiCode(ByVal fn As String) As String
 	 End Select
       End If
       If MojiCode = ENC_UNKNOWN Then
-	 'Shift_JIS ã®åˆ¤å®š
+	 'Shift_JIS ‚Ì”»’è
 	 .Position = 0
 	 Do While .Position < .Size
 	    ds = .Read(1)
 	    If ds(0) <= &H7F Or (ds(0) >= &HA1 And ds(0) <= &HDF) Then
-	       '1ãƒã‚¤ãƒˆæ–‡å­—
+	       '1ƒoƒCƒg•¶š
 	    ElseIf (ds(0) >= &H81 And ds(0) <= &H9F) Or (ds(0) >= &HE0 And ds(0) <= &HFC) Then
 	       If .Position < .Size Then
 		  ds = .Read(1)
 		  If ((ds(0) >= &H40 And ds(0) <= &H7E) Or (ds(0) >= &H80 And ds(0) <= &HFC)) Then
-		     '2ãƒã‚¤ãƒˆæ–‡å­—ã®1ãƒã‚¤ãƒˆç›®
+		     '2ƒoƒCƒg•¶š‚Ì1ƒoƒCƒg–Ú
 		  Else
 		     MojiCode = ENC_SHIFT_JIS
 		     Exit Do
@@ -149,18 +149,18 @@ Public Function MojiCode(ByVal fn As String) As String
 	    .Close
 	    Exit Function
 	 End If
-	 'UTF-8(BOMç„¡) ã®åˆ¤å®š
+	 'UTF-8(BOM–³) ‚Ì”»’è
 	 MojiCode = ENC_UTF8N
 	 .Position = 0
 	 Do While .Position < .Size
 	    ds = .Read(1)
 	    If ds(0) <= &H7F Then
-	       '1ãƒã‚¤ãƒˆæ–‡å­—
+	       '1ƒoƒCƒg•¶š
 	    ElseIf ds(0) >= &HC2 And ds(0) <= &HDF Then
 	       If .Position < .Size Then
 		  ds = .Read(1)
 		  If ds(0) >= &H80 And ds(0) <= &HBF Then
-		     '2ãƒã‚¤ãƒˆæ–‡å­—
+		     '2ƒoƒCƒg•¶š
 		  Else
 		     MojiCode = ENC_UNKNOWN
 		     Exit Do
@@ -173,7 +173,7 @@ Public Function MojiCode(ByVal fn As String) As String
 	       If .Position + 1 < .Size Then
 		  ds = .Read(2)
 		  If ds(0) >= &H80 And ds(0) <= &HBF And ds(1) >= &H80 And ds(1) <= &HBF Then
-		     '3ãƒã‚¤ãƒˆæ–‡å­—
+		     '3ƒoƒCƒg•¶š
 		  Else
 		     MojiCode = ENC_UNKNOWN
 		     Exit Do
@@ -188,7 +188,7 @@ Public Function MojiCode(ByVal fn As String) As String
 		  If ds(0) >= &H80 And ds(0) <= &HBF _
 		     And ds(1) >= &H80 And ds(1) <= &HBF _
 		     And ds(2) >= &H80 And ds(2) <= &HBF Then
-		     '4ãƒã‚¤ãƒˆæ–‡å­—
+		     '4ƒoƒCƒg•¶š
 		  Else
 		     MojiCode = ENC_UNKNOWN
 		     Exit Do
@@ -209,6 +209,6 @@ Public Function MojiCode(ByVal fn As String) As String
    Exit Function
    
 MojiCode_Error:
-   Call MsgBox"ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã«é€£çµ¡ã—ã¦ãã ã•ã„ã€‚" & vbcrlf & "MojiCode:(" & Err.Number & ":" & Err.Description & ")")   
+   Call MsgBox"ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½BƒVƒXƒeƒ€ŠÇ—Ò‚É˜A—‚µ‚Ä‚­‚¾‚³‚¢B" & vbcrlf & "MojiCode:(" & Err.Number & ":" & Err.Description & ")")   
    
 End Function
