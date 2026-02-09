@@ -8,10 +8,12 @@ Attribute VB_Name = "Main"
 '// DoClearMeibo()
 '// SetTokutenCSV()
 '// CsvToScs()
-'// IsSelectedFile(fn)
+'// IsOperated(fn)
+'// RecordFileName(fn)
 '//
 '// 履歴
 '// Ver.0.1                2026/02/06
+'// Ver.1.0                2026/02/09
 Option Explicit
 
 Private Const G_COL_NEN = 2
@@ -262,7 +264,7 @@ Private Function CsvToScs() As Boolean
             fn = .SelectedItems(1)
         End If
     End With
-    If IsSelectedFile(fn) Then
+    If IsOperated(fn) Then
        CsvToScs = False
        Exit Function
     End If
@@ -317,6 +319,7 @@ Private Function CsvToScs() As Boolean
 	  End If
        End If
     Next
+    CsvToScs = RecordFileName(fn)
     
     Exit Function
     
@@ -330,18 +333,18 @@ CsvToScs_Error:
 End Function
 
 '/////////////////////////////////////////////////////
-'// IsSelectedFile
+'// IsOperated
 '// 選択されたファイルが以前に取り込まれたファイル名と同じかどうかをチェックする
 '// 引数:
 '// fn: 文字列 ファイル名
 '// 戻り値:
 '// 処理の成功か否か
 '//
-Private Function IsSelectedFile(ByVal fn As String) As Boolean
+Private Function IsOperated(ByVal fn As String) As Boolean
 
-   On Error GoTo IsSelectedFile_Error
+   On Error GoTo IsOperated_Error
 
-   IsSelectedFile = False
+   IsOperated = False
    If Len(fn) = 0 Then Exit Function
    Dim c As Long: c = G_COL_FILE_START
    Dim r As Long: r = G_ROW_FILE_START
@@ -349,25 +352,14 @@ Private Function IsSelectedFile(ByVal fn As String) As Boolean
    With Sheets(G_CONF_SHEET)
       Do
 	 If .Cells(r, c).Value = "" Then
-	    .Cells(r, c).Value = fn
-	    IsSelectedFile = False
+	    IsOperated = False
 	    Exit Do
 	 Elseif .Cells(r, c).Value = fn Then
 	    Dim result As Long
 	    result = MsgBox("このファイルは以前取り込んだことがあるファイルのようです。再度取り込みますか？" & vbCrLf & _
 			    "ファイル名: " & fn , vbYesNo + vbQuestion + vbDefaultButton2, "確認")
-	    If result = vbYes Then 
-	       Do Until .Cells(r, c).Value = ""
-		  r = r + 1
-	       Loop
-	       .Cells(r, c).Value = fn
-	       .Cells(r, c + 1).Value = FormatDateTime(Now(), vbGeneralDate)
-	       IsSelectedFile = False
-	       Exit Do
-	    Else
-	       IsSelectedFile = True
-	       Exit Do
-	    End If
+	    IsOperated = (result = vbYes)
+	    Exit Do
 	 End If
 	 r = r + 1
       Loop
@@ -375,11 +367,47 @@ Private Function IsSelectedFile(ByVal fn As String) As Boolean
    
    Exit Function
 
-IsSelectedFile_Error:
+IsOperated_Error:
     Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
-	       & "IsSelectedFile:" & Err.Number & vbCrLf _
+	       & "IsOperated:" & Err.Number & vbCrLf _
 	       & "( " & Err.Description & " )")
     Err.Clear
-    IsSelectedFile = False
+    IsOperated = False
+   
+End Function
+
+'/////////////////////////////////////////////////////
+'// RecordFileName
+'// 処理されたファイルを記録する
+'// 引数;
+'// fn: 文字列 ファイル名
+'//
+Private Function RecordFileName(ByVal fn As String) As Boolean
+
+   On Error GoTo RecordFileName_Error
+
+   RecordFileName = False
+   If Len(fn) = 0 Then Exit Function
+
+   Dim c As Long: c = G_COL_FILE_START
+   Dim r As Long: r = G_ROW_FILE_START
+
+   With Sheets(G_CONF_SHEET)
+      Do Until .Cells(r, c).Value = ""
+	 r = r + 1
+      Loop
+      .Cells(r, c).Value = fn
+      .Cells(r, c + 1).Value = FormatDateTime(Now(), vbGeneralDate)
+      RecordFileName = True
+   End With
+
+   Exit Function
+
+RecordFileName_Error:
+   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "RecordFileName:" & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
+   Err.Clear
+   RecordFileName = False
    
 End Function
