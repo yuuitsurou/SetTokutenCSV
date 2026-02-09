@@ -278,7 +278,7 @@ Private Function CsvToScs() As Boolean
     Dim items() As String
     Dim seimei() As String
     For ii = 0 To UBound(lines)
-       If ii <> G_LIN_TITLE And Not IsEmpty(lines(ii)) Then
+       If ii <> G_LIN_TITLE And lines(ii) = "" Then
 	  items = Split(lines(ii), ",")
 	  scs_idx = scs_idx + 1
 	  If items(Sitms.Nen) <> "" Then
