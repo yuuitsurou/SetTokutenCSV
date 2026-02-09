@@ -277,35 +277,37 @@ Private Function CsvToScs() As Boolean
     Dim scs_idx As Long: scs_idx = -1
     Dim items() As String
     Dim seimei() As String
-    For ii = (G_LIN_TITLE + 1) To UBound(lines)
-       items = Split(lines(ii), ",")
-       scs_idx = scs_idx + 1
-       If items(Sitms.Nen) <> "" Then
-	  If items(Sitms.Nen) <> Sheets(G_CONF_SHEET).Cells(G_CELL_NEN).Value Then
-	     Call MsgBox("選択されたファイルには学年が違うデータがあるようです。" & vbCrLf & _
-			 CStr(ii + 1) & "行目 " & _
-			 "想定されている学年: " & CStr(Sheets(G_CONF_SHEET).Cells(G_CELL_NEN).Value) & " / " & "このファイルにあるデータ:" & items(Sitms.Nen))
-	     CsvToScs = False
-	     Exit Function
-	  End If
-	  ReDim Preserve Scs(scs_idx)
-	  Scs(scs_idx).Nen = items(Sitms.Nen)
-	  Scs(scs_idx).Kumi = items(Sitms.Kumi)
-	  Scs(scs_idx).Ban = items(Sitms.Ban)
-	  If items(Sitms.Mei) = "さん" Then
-	     seimei = Split(items(Sitms.Sei), " ")
-	     Scs(scs_idx).Sei = seimei(0)
-	     Scs(scs_idx).Mei = seimei(1)
+    For ii = 0 To UBound(lines)
+       If ii <> G_LIN_TITLE And Not IsEmpty(lines(ii)) Then
+	  items = Split(lines(ii), ",")
+	  scs_idx = scs_idx + 1
+	  If items(Sitms.Nen) <> "" Then
+	     If items(Sitms.Nen) <> Sheets(G_CONF_SHEET).Range(G_CELL_NEN).Value Then
+		Call MsgBox("選択されたファイルには学年が違うデータがあるようです。" & vbCrLf & _
+			    CStr(ii + 1) & "行目 " & _
+			    "想定されている学年: " & CStr(Sheets(G_CONF_SHEET).Range(G_CELL_NEN).Value) & " / " & "このファイルにあるデータ:" & items(Sitms.Nen))
+		CsvToScs = False
+		Exit Function
+	     End If
+	     ReDim Preserve Scs(scs_idx)
+	     Scs(scs_idx).Nen = items(Sitms.Nen)
+	     Scs(scs_idx).Kumi = items(Sitms.Kumi)
+	     Scs(scs_idx).Ban = items(Sitms.Ban)
+	     If items(Sitms.Mei) = "さん" Then
+		seimei = Split(items(Sitms.Sei), " ")
+		Scs(scs_idx).Sei = seimei(0)
+		Scs(scs_idx).Mei = seimei(1)
+	     Else
+		Scs(scs_idx).Sei = items(Sitms.Sei)
+		Scs(scs_idx).Mei = items(Sitms.Mei)
+	     End If
+	     Scs(scs_idx).Haiten = items(Sitms.Haiten)
+	     Scs(scs_idx).Tokuten = items(Sitms.Tokuten)
+	     Scs(scs_idx).Kanten1 = items(Sitms.Kanten1)
+	     Scs(scs_idx).Kanten2 = items(Sitms.Kanten2)
 	  Else
-	     Scs(scs_idx).Sei = items(Sitms.Sei)
-	     Scs(scs_idx).Mei = items(Sitms.Mei)
+	     scs_idx = scs_idx - 1
 	  End If
-	  Scs(scs_idx).Haiten = items(Sitms.Haiten)
-	  Scs(scs_idx).Tokuten = items(Sitms.Tokuten)
-	  Scs(scs_idx).Kanten1 = items(Sitms.Kanten1)
-	  Scs(scs_idx).Kanten2 = items(Sitms.Kanten2)
-       Else
-	  scs_idx = scs_idx - 1
        End If
     Next
     
