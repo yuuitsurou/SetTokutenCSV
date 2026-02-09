@@ -86,7 +86,9 @@ Public Sub DoClearData()
     Exit Sub
     
 DoClearData_Error:
-    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "DoClearData: " & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
     Err.Clear
     
 End Sub
@@ -105,7 +107,9 @@ Public Sub DoClearMeibo()
     Exit Sub
     
 DoClearMeibo_Error:
-    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "DoClearMeibo: " & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
     Err.Clear
 
 End Sub
@@ -141,7 +145,6 @@ Public Sub SetTokutenCSV()
     
     Application.ScreenUpdating = False
     
-    Dim c As Range
     Dim ii As Long: ii = 0
     Dim ri As Long
     Dim setToCell As Boolean
@@ -202,11 +205,11 @@ Public Sub SetTokutenCSV()
     
     Range(Cells(G_ROW_DAT_START - 1, 1), Cells(G_ROW_DAT_END, G_COL_DAT_END)).Select
     ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Clear
-    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_NEN), Cells(G_ROW_DAT_END, 2)), _
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_NEN), Cells(G_ROW_DAT_END, G_COL_NEN)), _
         SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_KUMI), Cells(G_ROW_DAT_END, 3)), _
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_KUMI), Cells(G_ROW_DAT_END, G_COL_KUMI)), _
         SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_BAN), Cells(G_ROW_DAT_END, 4)), _
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_BAN), Cells(G_ROW_DAT_END, G_COL_BAN)), _
         SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
     With ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort
         .SetRange Range(Cells(G_ROW_DAT_START - 1, 1), Cells(G_ROW_DAT_END, G_COL_DAT_END))
@@ -224,7 +227,10 @@ Public Sub SetTokutenCSV()
     
 SetTokutenCSV_Error:
     Application.ScreenUpdating = True
-    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "SetTokutenCSV: " & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
+    Err.Clear
     
 End Sub
 
@@ -315,7 +321,9 @@ Private Function CsvToScs() As Boolean
     Exit Function
     
 CsvToScs_Error:
-    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "CsvToScs: " & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
     Err.Clear
     CsvToScs = False
 
@@ -348,15 +356,16 @@ Private Function IsSelectedFile(ByVal fn As String) As Boolean
 	    Dim result As Long
 	    result = MsgBox("このファイルは以前取り込んだことがあるファイルのようです。再度取り込みますか？" & vbCrLf & _
 			    "ファイル名: " & fn , vbYesNo + vbQuestion + vbDefaultButton2, "確認")
-	    If result = vbNo Then 
-	       IsSelectedFile = True
-	       Exit Do
-	    Else
+	    If result = vbYes Then 
 	       Do Until .Cells(r, c).Value = ""
 		  r = r + 1
 	       Loop
 	       .Cells(r, c).Value = fn
+	       .Cells(r, c + 1).Value = FormatDateTime(Now(), vbGeneralDate)
 	       IsSelectedFile = False
+	       Exit Do
+	    Else
+	       IsSelectedFile = True
 	       Exit Do
 	    End If
 	 End If
@@ -367,7 +376,9 @@ Private Function IsSelectedFile(ByVal fn As String) As Boolean
    Exit Function
 
 IsSelectedFile_Error:
-    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf & "(" & Err.Number & ":" & Err.Description & ")")
+    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "IsSelectedFile:" & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
     Err.Clear
     IsSelectedFile = False
    
