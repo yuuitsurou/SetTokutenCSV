@@ -509,7 +509,7 @@ Private Function CsvToKtjs() As Boolean
 	  End If
        End If
     Next
-    CsvToScs = RecordFileName(fn)
+    CsvToKtjs = RecordFileName(fn)
     
     Exit Function
 
