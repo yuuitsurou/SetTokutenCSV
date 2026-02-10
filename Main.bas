@@ -483,27 +483,27 @@ Private Function CsvToKtjs() As Boolean
        If ii <> G_LIN_TITLE And lines(ii) <> "" And Not IsEmpty(lines(ii)) Then
 	  items = Split(lines(ii), ",")
 	  ktjs_idx = ktjs_idx + 1
-	  If items(Sitms.Nen) <> "" Then
-	     If items(Sitms.Nen) <> Sheets(G_CONF_SHEET).Range(G_CELL_NEN).Value Then
+	  If items(Kitms.Nen) <> "" Then
+	     If items(Kitms.Nen) <> Sheets(G_CONF_SHEET).Range(G_CELL_NEN).Value Then
 		Call MsgBox("選択されたファイルには学年が違うデータがあるようです。" & vbCrLf & _
 			    CStr(ii + 1) & "行目 " & _
-			    "想定されている学年: " & CStr(Sheets(G_CONF_SHEET).Range(G_CELL_NEN).Value) & " / " & "このファイルにあるデータ:" & items(Sitms.Nen))
+			    "想定されている学年: " & CStr(Sheets(G_CONF_SHEET).Range(G_CELL_NEN).Value) & " / " & "このファイルにあるデータ:" & items(Kitms.Nen))
 		CsvToKtjs = False
 		Exit Function
 	     End If
 	     ReDim Preserve Ktjs(ktjs_idx)
-	     Ktjs(ktjs_idx).Nen = items(Sitms.Nen)
-	     Ktjs(ktjs_idx).Kumi = items(Sitms.Kumi)
-	     Ktjs(ktjs_idx).Ban = items(Sitms.Ban)
-	     If items(Sitms.Mei) = "さん" Then
-		seimei = Split(items(Sitms.Sei), " ")
+	     Ktjs(ktjs_idx).Nen = items(Kitms.Nen)
+	     Ktjs(ktjs_idx).Kumi = items(Kitms.Kumi)
+	     Ktjs(ktjs_idx).Ban = items(Kitms.Ban)
+	     If items(Kitms.Mei) = "さん" Then
+		seimei = Split(items(Kitms.Sei), " ")
 		Ktjs(ktjs_idx).Sei = seimei(0)
 		Ktjs(ktjs_idx).Mei = seimei(1)
 	     Else
-		Ktjs(ktjs_idx).Sei = items(Sitms.Sei)
-		Ktjs(ktjs_idx).Mei = items(Sitms.Mei)
+		Ktjs(ktjs_idx).Sei = items(Kitms.Sei)
+		Ktjs(ktjs_idx).Mei = items(Kitms.Mei)
 	     End If
-	     Ktjs(ktjs_idx).Nissu = items(Sitms.Nissu)
+	     Ktjs(ktjs_idx).Nissu = items(Kitms.Nissu)
 	  Else
 	     ktjs_idx = ktjs_idx - 1
 	  End If
