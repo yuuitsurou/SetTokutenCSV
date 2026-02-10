@@ -8,12 +8,16 @@ Attribute VB_Name = "Main"
 '// DoClearMeibo()
 '// SetTokutenCSV()
 '// CsvToScs()
+'// SetKetujiCSV()
+'// CsvToKtjs()
+'// SortDatas()
 '// IsOperated(fn)
 '// RecordFileName(fn)
 '//
 '// 履歴
-'// Ver.0.1                2026/02/06
-'// Ver.1.0                2026/02/09
+'// 2026/02/06 Ver.0.1
+'// 2026/02/09 Ver.1.0
+'// 2026/02/11 Ver.1.1 欠時読み込みを追加
 Option Explicit
 
 Private Const G_COL_NEN = 2
@@ -24,7 +28,7 @@ Private Const G_COL_MEI = 6
 
 Private Const G_ROW_DAT_START = 18
 Private Const G_ROW_DAT_END = 217
-Private Const G_COL_DAT_END = 30
+Private Const G_COL_DAT_END = 34
 
 Private Const G_DAT_MAX = 200
 
@@ -40,7 +44,17 @@ Private Type Score
     Kanten2 As String
 End Type
 
+Private Type Ketuji
+    Nen As String
+    Kumi As String
+    Ban As String
+    Sei As String
+    Mei As String
+    Nissu As String
+End Type
+
 Private Scs() As Score
+Private Ktjs() As Ketuji
 
 Private Enum Sitms
    Nen = 0
@@ -52,6 +66,15 @@ Private Enum Sitms
    Tokuten
    Kanten1
    Kanten2
+End Enum
+
+Private Enum Kitms
+   Nen = 0
+   Kumi
+   Ban
+   Sei
+   Mei
+   Nissu
 End Enum
 
 Private Const G_LIN_TITLE = 0
@@ -204,26 +227,8 @@ Public Sub SetTokutenCSV()
     End If
     
     Application.ScreenUpdating = True
-    
-    Range(Cells(G_ROW_DAT_START - 1, 1), Cells(G_ROW_DAT_END, G_COL_DAT_END)).Select
-    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Clear
-    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_NEN), Cells(G_ROW_DAT_END, G_COL_NEN)), _
-        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_KUMI), Cells(G_ROW_DAT_END, G_COL_KUMI)), _
-        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_BAN), Cells(G_ROW_DAT_END, G_COL_BAN)), _
-        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
-    With ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort
-        .SetRange Range(Cells(G_ROW_DAT_START - 1, 1), Cells(G_ROW_DAT_END, G_COL_DAT_END))
-        .Header = xlYes
-        .MatchCase = False
-        .Orientation = xlTopToBottom
-        .SortMethod = xlPinYin
-        .Apply
-    End With
-    For ii = 1 To G_DAT_MAX
-        Cells(ii + 17, 1).Value = ii
-    Next    
+
+    Call SortDatas()
     
     Exit Sub
     
@@ -333,6 +338,191 @@ CsvToScs_Error:
 End Function
 
 '/////////////////////////////////////////////////////
+'// SetKetujiCSV
+'// 欠時が記録されたCSVファイルの値を考査得点・クラス名票貼り付けシートに貼り付ける
+'//
+Public Sub SetKetujiCSV()
+   
+    On Error GoTo SetKetujiCSV_Error
+    
+    'ファイルの文字コードを Shift_SJIS に変換したファイルを作成して、読み込み
+    '配列 Scs にセットする
+    If Not CsvToKtjs() Then Exit Sub
+
+    Sheets(G_DATA_SET_SHEET).Select
+    Range("B18").Select
+    
+    On Error Resume Next
+    Dim result As Range
+    Set result = Application.InputBox("欠時をセットする最初のセルをクリックしてください。", Type:=8)
+    If Err.Number <> 0 Then
+        Call MsgBox("キャンセルされました。")
+        Exit Sub
+    End If
+    Err.Clear
+    
+    On Error GoTo SetKetujiCSV_Error
+    Dim startColumn As Long: startColumn = result.Column
+    Set result = Nothing
+    
+    Application.ScreenUpdating = False
+    
+    Dim ii As Long: ii = 0
+    Dim ri As Long
+    Dim setToCell As Boolean
+    Dim newri As Long
+    newri = -1
+    Dim n() As Ketuji
+    For ii = 0 To UBound(Ktjs)
+        ri = G_ROW_DAT_START - 1
+        setToCell = False
+        Do
+            ri = ri + 1
+            If Cells(ri, G_COL_NEN).Value = "" Then Exit Do
+            If Cells(ri, G_COL_NEN).Value = Ktjs(ii).Nen _
+                And Cells(ri, G_COL_KUMI).Value = Ktjs(ii).Kumi _
+                And Cells(ri, G_COL_BAN).Value = Ktjs(ii).Ban _
+                And Cells(ri, G_COL_SEI).Value = Ktjs(ii).Sei _
+                And Cells(ri, G_COL_MEI).Value = Ktjs(ii).Mei Then
+                Cells(ri, startColumn).Value = Ktjs(ii).Ketuji
+                setToCell = True
+                Exit Do
+            End If
+        Loop
+        If Not setToCell Then
+            newri = newri + 1
+            ReDim Preserve n(newri)
+            n(newri).Nen = Ktjs(ii).Nen
+            n(newri).Kumi = Ktjs(ii).Kumi
+            n(newri).Ban = Ktjs(ii).Ban
+            n(newri).Sei = Ktjs(ii).Sei
+            n(newri).Mei = Ktjs(ii).Mei
+            n(newri).Ketuji = Ktjs(ii).Ketuji
+        End If
+    Next
+    If newri > -1 Then
+        ri = G_ROW_DAT_START
+        Do Until Cells(ri, 2).Value = ""
+            ri = ri + 1
+        Loop
+        For ii = 0 To UBound(n)
+            Cells(ri, G_COL_NEN).Value = n(ii).Nen
+            Cells(ri, G_COL_KUMI).Value = n(ii).Kumi
+            Cells(ri, G_COL_BAN).Value = n(ii).Ban
+            Cells(ri, G_COL_SEI).Value = n(ii).Sei
+            Cells(ri, G_COL_MEI).Value = n(ii).Mei
+            Cells(ri, startColumn).Ketuji = n(ii).Ketuji
+            ri = ri + 1
+        Next
+    End If
+    
+    Application.ScreenUpdating = True
+
+    Call SortDatas()
+    
+    Exit Sub
+    
+SetKetujiCSV_Error:
+    Application.ScreenUpdating = True
+    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "SetKetujiCSV: " & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
+    Err.Clear
+End Sub
+
+'/////////////////////////////////////////////////////
+'// CsvToKtjs
+'// 欠時を記録した CSV を読み込み
+'// Shift_JIS に変換してファイルを作成し、それを読み込んで
+'// 配列 Ktjs にセットする
+'// 戻り値:
+'// 処理の成功か否か
+'//
+Private Function CsvToKtjs() As Boolean
+
+   On Error GoTo CsvToKtjs_Error
+    Dim fn As String
+    Dim dlg As FileDialog
+    With Application.FileDialog(msoFileDialogFilePicker)
+        .Title = "欠時が記録されたCSVファイルを選択してください。"
+        .Filters.Clear
+        .Filters.Add "CSV", "*.csv"
+        .InitialFileName = Application.ActiveWorkbook.path
+        .AllowMultiSelect = False
+        If .Show = False Then
+	   Call MsgBox("キャンセルされました。")
+	   CsvToKtjs = False
+	   Exit Function
+        Else
+            fn = .SelectedItems(1)
+        End If
+    End With
+    If IsOperated(fn) Then
+       CsvToKtjs = False
+       Exit Function
+    End If
+
+    Dim fc As String
+    fc = ReadFileToSJISText(fn)
+    If Len(fc) <= 0 Then
+       Call MsgBox("選択されたファイルに取り込めるデータがありません。" & vbCrLf & "(" & fn & ")")
+       CsvToKtjs = False
+    Else
+       CsvToKtjs = True
+    End If
+
+    Dim lines() As String
+    lines = Split(fc, vbCrLf)
+    
+    Dim ii As Long: ii = 0
+    Dim ktjs_idx As Long: ktjs_idx = -1
+    Dim items() As String
+    Dim seimei() As String
+    Erase Ktjs
+    For ii = 0 To UBound(lines)
+       If ii <> G_LIN_TITLE And lines(ii) <> "" And Not IsEmpty(lines(ii)) Then
+	  items = Split(lines(ii), ",")
+	  ktjs_idx = ktjs_idx + 1
+	  If items(Sitms.Nen) <> "" Then
+	     If items(Sitms.Nen) <> Sheets(G_CONF_SHEET).Range(G_CELL_NEN).Value Then
+		Call MsgBox("選択されたファイルには学年が違うデータがあるようです。" & vbCrLf & _
+			    CStr(ii + 1) & "行目 " & _
+			    "想定されている学年: " & CStr(Sheets(G_CONF_SHEET).Range(G_CELL_NEN).Value) & " / " & "このファイルにあるデータ:" & items(Sitms.Nen))
+		CsvToKtjs = False
+		Exit Function
+	     End If
+	     ReDim Preserve Ktjs(ktjs_idx)
+	     Ktjs(ktjs_idx).Nen = items(Sitms.Nen)
+	     Ktjs(ktjs_idx).Kumi = items(Sitms.Kumi)
+	     Ktjs(ktjs_idx).Ban = items(Sitms.Ban)
+	     If items(Sitms.Mei) = "さん" Then
+		seimei = Split(items(Sitms.Sei), " ")
+		Ktjs(ktjs_idx).Sei = seimei(0)
+		Ktjs(ktjs_idx).Mei = seimei(1)
+	     Else
+		Ktjs(ktjs_idx).Sei = items(Sitms.Sei)
+		Ktjs(ktjs_idx).Mei = items(Sitms.Mei)
+	     End If
+	     Ktjs(ktjs_idx).Ketuji = items(Sitms.Ketuji)
+	  Else
+	     ktjs_idx = ktjs_idx - 1
+	  End If
+       End If
+    Next
+    CsvToScs = RecordFileName(fn)
+    
+    Exit Function
+
+CsvToKtjs_Error:
+    Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "CsvToKtjs: " & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
+    Err.Clear
+    CsvToKtjs = False
+   
+End Function
+
+'/////////////////////////////////////////////////////
 '// IsOperated
 '// 選択されたファイルが以前に取り込まれたファイル名と同じかどうかをチェックする
 '// 引数:
@@ -411,3 +601,43 @@ RecordFileName_Error:
    RecordFileName = False
    
 End Function
+
+'/////////////////////////////////////////////////////
+'// SortDatas
+'// データを並び換える
+'//
+Private Sub SortDatas()
+
+   On Error GoTo SortDatas_Error
+   
+   Range(Cells(G_ROW_DAT_START - 1, 1), Cells(G_ROW_DAT_END, G_COL_DAT_END)).Select
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_NEN), Cells(G_ROW_DAT_END, G_COL_NEN)), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_KUMI), Cells(G_ROW_DAT_END, G_COL_KUMI)), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort.SortFields.Add2 Key:=Range(Cells(G_ROW_DAT_START, G_COL_BAN), Cells(G_ROW_DAT_END, G_COL_BAN)), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With ActiveWorkbook.Worksheets(G_DATA_SET_SHEET).Sort
+        .SetRange Range(Cells(G_ROW_DAT_START - 1, 1), Cells(G_ROW_DAT_END, G_COL_DAT_END))
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    Dim ii As Long
+    For ii = G_ROW_DAT_START To (G_DAT_MAX + G_ROW_DAT_START - 1)
+        Cells(ii, 1).Value = (ii - G_ROW_DAT_START + 1)
+    Next
+
+    Exit Sub
+    
+SortDatas_Error:
+   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "SortDatas:" & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
+   Err.Clear
+    
+End Sub
+
