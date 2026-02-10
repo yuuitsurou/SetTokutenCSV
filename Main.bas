@@ -384,7 +384,7 @@ Public Sub SetKetujiCSV()
                 And Cells(ri, G_COL_BAN).Value = Ktjs(ii).Ban _
                 And Cells(ri, G_COL_SEI).Value = Ktjs(ii).Sei _
                 And Cells(ri, G_COL_MEI).Value = Ktjs(ii).Mei Then
-                Cells(ri, startColumn).Value = Ktjs(ii).Ketuji
+                Cells(ri, startColumn).Value = Ktjs(ii).Nissu
                 setToCell = True
                 Exit Do
             End If
@@ -397,7 +397,7 @@ Public Sub SetKetujiCSV()
             n(newri).Ban = Ktjs(ii).Ban
             n(newri).Sei = Ktjs(ii).Sei
             n(newri).Mei = Ktjs(ii).Mei
-            n(newri).Ketuji = Ktjs(ii).Ketuji
+            n(newri).Nissu = Ktjs(ii).Nissu
         End If
     Next
     If newri > -1 Then
@@ -411,7 +411,7 @@ Public Sub SetKetujiCSV()
             Cells(ri, G_COL_BAN).Value = n(ii).Ban
             Cells(ri, G_COL_SEI).Value = n(ii).Sei
             Cells(ri, G_COL_MEI).Value = n(ii).Mei
-            Cells(ri, startColumn).Ketuji = n(ii).Ketuji
+            Cells(ri, startColumn).Value = n(ii).Nissu
             ri = ri + 1
         Next
     End If
@@ -503,7 +503,7 @@ Private Function CsvToKtjs() As Boolean
 		Ktjs(ktjs_idx).Sei = items(Sitms.Sei)
 		Ktjs(ktjs_idx).Mei = items(Sitms.Mei)
 	     End If
-	     Ktjs(ktjs_idx).Ketuji = items(Sitms.Ketuji)
+	     Ktjs(ktjs_idx).Nissu = items(Sitms.Nissu)
 	  Else
 	     ktjs_idx = ktjs_idx - 1
 	  End If
@@ -627,7 +627,7 @@ Private Sub SortDatas()
         .Apply
     End With
     Dim ii As Long
-    For ii = G_ROW_DAT_START To (G_DAT_MAX + G_ROW_DAT_START - 1)
+    For ii = G_ROW_DAT_START To G_ROW_DAT_END
         Cells(ii, 1).Value = (ii - G_ROW_DAT_START + 1)
     Next
 
