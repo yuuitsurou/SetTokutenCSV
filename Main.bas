@@ -6,6 +6,7 @@ Attribute VB_Name = "Main"
 '// 関数
 '// DoClearData()
 '// DoClearMeibo()
+'// DoClearKetuji()
 '// SetTokutenCSV()
 '// CsvToScs()
 '// SetKetujiCSV()
@@ -18,6 +19,7 @@ Attribute VB_Name = "Main"
 '// 2026/02/06 Ver.0.1
 '// 2026/02/09 Ver.1.0
 '// 2026/02/11 Ver.1.1 欠時読み込みを追加
+'// 2026/02/13 Ver.1.2 欠時データのクリア追加
 Option Explicit
 
 Private Const G_COL_NEN = 2
@@ -137,6 +139,40 @@ DoClearMeibo_Error:
 	       & "( " & Err.Description & " )")
     Err.Clear
 
+End Sub
+
+'/////////////////////////////////////////////////////
+'// DoClearKetuji
+'// 欠時データのクリア
+'//
+Public Sub DoClearKetuji()
+    
+    On Error GoTo DoClearKetuji_Error
+    
+    On Error Resume Next
+    Dim result As Range
+    Set result = Application.InputBox("欠時をクリアする最初のセルをクリックしてください。", Type:=8)
+    If Err.Number <> 0 Then
+        Call MsgBox("キャンセルされました。")
+        Exit Sub
+    End If
+    Err.Clear
+    
+    On Error GoTo DoClearKetuji_Error
+    Dim startColumn As Long: startColumn = result.Column
+    Set result = Nothing
+    
+    Dim r As Range
+    Set r = Range(Cells(G_ROW_DAT_START, startColumn), Cells(G_ROW_DAT_END, startColumn))
+    r.Clear
+    Exit Sub
+    
+DoClearKetuji_Error:
+   Call MsgBox("エラーが発生しました。システム管理者に連絡してください。" & vbCrLf _
+	       & "DoClearKetuji: " & Err.Number & vbCrLf _
+	       & "( " & Err.Description & " )")
+    Err.Clear
+    
 End Sub
 
 '/////////////////////////////////////////////////////
