@@ -98,7 +98,7 @@ Public Sub DoClearData()
     Dim result As Range
     Set result = Application.InputBox("得点をクリアする最初のセルをクリックしてください。", Type:=8)
     If Err.Number <> 0 Then
-        Call MsgBox("キャンセルされました。")
+        Call MsgBox("キャンセルされました。", title:="得点データのクリア")
         Exit Sub
     End If
     Err.Clear
@@ -153,7 +153,7 @@ Public Sub DoClearKetuji()
     Dim result As Range
     Set result = Application.InputBox("欠時をクリアする最初のセルをクリックしてください。", Type:=8)
     If Err.Number <> 0 Then
-        Call MsgBox("キャンセルされました。")
+        Call MsgBox("キャンセルされました。", title:="欠時データのクリア")
         Exit Sub
     End If
     Err.Clear
@@ -195,7 +195,7 @@ Public Sub SetTokutenCSV()
     Dim result As Range
     Set result = Application.InputBox("得点をセットする最初のセルをクリックしてください。", Type:=8)
     If Err.Number <> 0 Then
-        Call MsgBox("キャンセルされました。")
+        Call MsgBox("キャンセルされました。", title:="得点データのセット")
         Exit Sub
     End If
     Err.Clear
@@ -298,7 +298,7 @@ Private Function CsvToScs() As Boolean
         .InitialFileName = Application.ActiveWorkbook.path
         .AllowMultiSelect = False
         If .Show = False Then
-	   Call MsgBox("キャンセルされました。")
+	   Call MsgBox("キャンセルされました。", title:="リアテンダントのCSVデータファイルの指定")
 	   CsvToScs = False
 	   Exit Function
         Else
@@ -392,7 +392,7 @@ Public Sub SetKetujiCSV()
     Dim result As Range
     Set result = Application.InputBox("欠時をセットする最初のセルをクリックしてください。", Type:=8)
     If Err.Number <> 0 Then
-        Call MsgBox("キャンセルされました。")
+        Call MsgBox("キャンセルされました。", title:="欠時データのセット")
         Exit Sub
     End If
     Err.Clear
@@ -486,7 +486,7 @@ Private Function CsvToKtjs() As Boolean
         .InitialFileName = Application.ActiveWorkbook.path
         .AllowMultiSelect = False
         If .Show = False Then
-	   Call MsgBox("キャンセルされました。")
+	   Call MsgBox("キャンセルされました。", title:="欠時データCSVの選択")
 	   CsvToKtjs = False
 	   Exit Function
         Else
